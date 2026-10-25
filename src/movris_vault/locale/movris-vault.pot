@@ -326,20 +326,52 @@ msgid_plural "{n} days ago"
 msgstr[0] ""
 msgstr[1] ""
 
-#: src/movris_vault/ui/app.py:93
+#: src/movris_vault/ui/app.py:117
 msgid "Automatic (system)"
 msgstr ""
 
-#: src/movris_vault/ui/app.py:97
+#: src/movris_vault/ui/app.py:121
 msgid "Language"
 msgstr ""
 
-#: src/movris_vault/ui/app.py:98
+#: src/movris_vault/ui/app.py:122 src/movris_vault/ui/app.py:77
+msgid "Support Movris Vault"
+msgstr ""
+
+#: src/movris_vault/ui/app.py:123
 msgid "About Movris Vault"
+msgstr ""
+
+#: src/movris_vault/ui/app.py:69
+msgid "Contact on Telegram"
+msgstr ""
+
+#: src/movris_vault/ui/app.py:70
+msgid "Donate on Liberapay"
+msgstr ""
+
+#: src/movris_vault/ui/app.py:71
+msgid "Donate on Ko-fi"
+msgstr ""
+
+#: src/movris_vault/ui/app.py:81
+msgid "Not now"
+msgstr ""
+
+#: src/movris_vault/ui/app.py:82
+msgid "One-off (Ko-fi)"
+msgstr ""
+
+#: src/movris_vault/ui/app.py:83
+msgid "Monthly (Liberapay)"
 msgstr ""
 
 #: src/movris_vault/ui/app.py:18
 msgid "The window libraries (GTK 4 and libadwaita) are missing. Install them with:"
+msgstr ""
+
+#: src/movris_vault/ui/app.py:78
+msgid "Movris Vault is free, has no ads and never sends your data anywhere. If it's useful to you, you can support its development with a donation."
 msgstr ""
 
 #: src/movris_vault/ui/window.py:137

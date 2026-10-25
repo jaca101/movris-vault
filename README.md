@@ -69,6 +69,17 @@ Texts are written in English in the code and translated in `src/movris_vault/loc
 - Automatic backups when the iPhone is plugged in.
 - Flatpak.
 
+## Support
+
+Movris Vault is free, has no ads and no tracking. If it saves your iPhone's data, you can support
+its development:
+
+- [Liberapay](https://liberapay.com/jaca101/) — monthly donations, run by a non-profit.
+- [Ko-fi](https://ko-fi.com/jaca101) — one-off donations with PayPal or card.
+
+Questions or help: [@jaca101 on Telegram](https://t.me/jaca101), or open an
+[issue](https://github.com/jaca101/movris-vault/issues).
+
 ## En español
 
 Movris Vault hace copias de seguridad cifradas del iPhone en Linux con un botón. Instálala con
@@ -76,6 +87,9 @@ Movris Vault hace copias de seguridad cifradas del iPhone en Linux con un botón
 está en español, y se puede cambiar en el menú (☰ → Idioma).
 Si activas el cifrado, te sugiere usar la misma contraseña con la que entras en el ordenador y
 la guarda en el llavero; apúntala igualmente, porque sin ella no se puede restaurar la copia.
+
+Es gratis y sin publicidad. Si te resulta útil, puedes apoyarla en [Liberapay](https://liberapay.com/jaca101/)
+(cada mes) o [Ko-fi](https://ko-fi.com/jaca101) (una vez, con PayPal o tarjeta). Dudas: [@jaca101 en Telegram](https://t.me/jaca101).
 
 ## License
 

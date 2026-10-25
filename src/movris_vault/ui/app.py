@@ -23,7 +23,7 @@ def run() -> int:
 
     logging.getLogger("pymobiledevice3").setLevel(logging.ERROR)
 
-    from .. import APP_ID, APP_NAME, WEBSITE, __version__, i18n
+    from .. import APP_ID, APP_NAME, KOFI_URL, LIBERAPAY_URL, TELEGRAM_URL, WEBSITE, __version__, i18n
     from ..core import settings
     from ..core.runner import AsyncRunner
     from .window import MainWindow
@@ -66,16 +66,40 @@ def run() -> int:
             license_type=Gtk.License.GPL_3_0,
             developer_name="jaca101",
         )
+        about.add_link(_("Contact on Telegram"), TELEGRAM_URL)
+        about.add_link(_("Donate on Liberapay"), LIBERAPAY_URL)
+        about.add_link(_("Donate on Ko-fi"), KOFI_URL)
         about.present(app.get_active_window())
+
+    def on_support(*_args) -> None:
+        window = app.get_active_window()
+        dialog = Adw.AlertDialog(
+            heading=_("Support Movris Vault"),
+            body=_("Movris Vault is free, has no ads and never sends your data anywhere. "
+                   "If it's useful to you, you can support its development with a donation."),
+        )
+        dialog.add_response("close", _("Not now"))
+        dialog.add_response("kofi", _("One-off (Ko-fi)"))
+        dialog.add_response("liberapay", _("Monthly (Liberapay)"))
+        dialog.set_close_response("close")
+        links = {"kofi": KOFI_URL, "liberapay": LIBERAPAY_URL}
+
+        def on_response(_dialog, response: str) -> None:
+            if response in links:
+                Gtk.UriLauncher(uri=links[response]).launch(window, None, None)
+
+        dialog.connect("response", on_response)
+        dialog.present(window)
 
     language = Gio.SimpleAction.new_stateful(
         "language", GLib.VariantType.new("s"), GLib.Variant("s", settings.load().language)
     )
     language.connect("activate", on_language)
     app.add_action(language)
-    about = Gio.SimpleAction.new("about", None)
-    about.connect("activate", on_about)
-    app.add_action(about)
+    for name, callback in (("about", on_about), ("support", on_support)):
+        action = Gio.SimpleAction.new(name, None)
+        action.connect("activate", callback)
+        app.add_action(action)
 
     app.connect("activate", on_activate)
     try:
@@ -95,5 +119,6 @@ def main_menu() -> "Gio.Menu":
         languages.append(name, f"app.language::{code}")
     menu = Gio.Menu()
     menu.append_submenu(_("Language"), languages)
+    menu.append(_("Support Movris Vault"), "app.support")
     menu.append(_("About Movris Vault"), "app.about")
     return menu
