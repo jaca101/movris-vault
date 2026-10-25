@@ -14,6 +14,7 @@ from pymobiledevice3.exceptions import PyMobileDevice3Exception
 
 from . import device
 from .backup import _ObservedBackupService
+from ..i18n import _
 from .errors import FriendlyError
 
 SCHEMA_NAME = "io.github.jaca101.MovrisVault.BackupPassword"
@@ -25,9 +26,9 @@ MIN_LENGTH = 4
 def check_new_password(password: str, repeated: str) -> Optional[str]:
     """Qué le pasa a la contraseña nueva, o None si vale."""
     if len(password) < MIN_LENGTH:
-        return f"Tiene que tener al menos {MIN_LENGTH} caracteres."
+        return _("It must have at least {n} characters.").format(n=MIN_LENGTH)
     if password != repeated:
-        return "Las dos contraseñas no coinciden."
+        return _("The two passwords don't match.")
     return None
 
 
@@ -47,7 +48,7 @@ def store_password(udid: str, device_name: str, password: str) -> None:
     Secret, schema = _secret()
     Secret.password_store_sync(
         schema, {"udid": udid}, Secret.COLLECTION_DEFAULT,
-        f"Contraseña de las copias de {device_name} (Movris Vault)", password, None,
+        _("Backup password for {device} (Movris Vault)").format(device=device_name), password, None,
     )
 
 
@@ -60,7 +61,7 @@ def lookup_password(udid: str) -> Optional[str]:
         Secret, old_schema = _secret(legacy)
         password = Secret.password_lookup_sync(old_schema, {"udid": udid}, None)
         if password is not None:
-            store_password(udid, "tu iPhone", password)
+            store_password(udid, "iPhone", password)
             Secret.password_clear_sync(old_schema, {"udid": udid}, None)
             return password
     return None
@@ -79,11 +80,12 @@ async def set_password(udid: str, backup_root: Path, new: str, old: str = "") ->
             raise
         if old:
             raise FriendlyError(
-                "El iPhone no ha aceptado el cambio",
-                "Puede que la contraseña anterior no sea la correcta.",
+                _("The iPhone didn't accept the change"),
+                _("The current password may not be the right one."),
             ) from exc
         raise FriendlyError(
-            "El iPhone no ha activado el cifrado", "Desbloquéalo, escribe tu código si te lo pide y vuelve a intentarlo."
+            _("The iPhone didn't turn on encryption"),
+            _("Unlock it, enter your passcode if it asks for it, and try again."),
         ) from exc
     finally:
         await lockdown.close()

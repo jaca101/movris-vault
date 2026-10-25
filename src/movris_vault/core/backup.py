@@ -21,7 +21,8 @@ from pymobiledevice3.services.mobilebackup2 import (
 )
 
 from . import device, storage
-from .errors import CANCELLED_ON_DEVICE, FriendlyError, friendly
+from ..i18n import _
+from .errors import FriendlyError, cancelled_on_device, friendly
 
 # Una copia completa ocupa algo menos que lo usado en el iPhone (en las pruebas: 245 GB de 287 GB)
 FULL_BACKUP_RATIO = 0.85
@@ -209,7 +210,8 @@ class BackupJob:
             entry = storage.find_backup(self.root, self.udid)
             if entry is None or not entry.complete:
                 raise FriendlyError(
-                    "La copia no ha terminado bien", "El iPhone dejó de enviar datos antes de acabar. Vuelve a intentarlo."
+                    _("The backup didn't finish properly"),
+                    _("The iPhone stopped sending data before the end. Try again."),
                 )
             self._set(phase=Phase.DONE, percent=100.0, eta=0.0, stalled=False)
         except asyncio.CancelledError:
@@ -218,11 +220,11 @@ class BackupJob:
             hint = ""
             if self._snapshot.phase in (Phase.CONNECTING, Phase.WAITING_PASSCODE):
                 # Cancelar con el aviso del código abierto deja al iPhone esperando
-                hint = "Si la próxima copia no arranca, desconecta y vuelve a conectar el cable."
+                hint = _("If the next backup doesn't start, unplug the cable and plug it back in.")
             await self._put_back_set_aside()
             self._set(phase=Phase.CANCELLED, stalled=False, hint=hint)
         except Exception as exc:
-            error = CANCELLED_ON_DEVICE if self._cancelled_on_device else friendly(exc)
+            error = cancelled_on_device() if self._cancelled_on_device else friendly(exc)
             await self._put_back_set_aside()
             self._set(phase=Phase.FAILED, stalled=False, error=error)
         finally:

@@ -15,6 +15,7 @@ CONFIG_DIR = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config")) / 
 @dataclass
 class Settings:
     backup_root: str = str(storage.DEFAULT_ROOT)
+    language: str = "auto"  # "auto" (el del sistema) o un código de i18n.LANGUAGES
 
     @property
     def root(self) -> Path:

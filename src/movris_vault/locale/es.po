@@ -1,0 +1,687 @@
+# Traducción al español de Movris Vault.
+msgid ""
+msgstr ""
+"Project-Id-Version: movris-vault\n"
+"Language: es\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: src/movris_vault/cli.py:51
+msgid "Look at the iPhone: tap “Trust” and enter your passcode."
+msgstr "Mira el iPhone: pulsa «Confiar» y escribe tu código."
+
+#: src/movris_vault/cli.py:54
+msgid "Paired."
+msgstr "Emparejado."
+
+#: src/movris_vault/cli.py:67
+msgid "Tip: use the same password you use to log in to this computer, so there's only one to remember."
+msgstr "Consejo: usa la misma contraseña con la que entras en el ordenador; así solo tienes que recordar una."
+
+#: src/movris_vault/cli.py:68
+msgid "New password: "
+msgstr "Contraseña nueva: "
+
+#: src/movris_vault/cli.py:73 src/movris_vault/ui/window.py:205
+msgid "If the iPhone asks for your passcode, enter it."
+msgstr "Si el iPhone te pide el código, escríbelo."
+
+#: src/movris_vault/cli.py:107
+msgid "Incremental backup of {device} in {folder}"
+msgstr "Copia incremental de {device} en {folder}"
+
+#: src/movris_vault/cli.py:107
+msgid "Full backup of {device} in {folder}"
+msgstr "Copia completa de {device} en {folder}"
+
+#: src/movris_vault/cli.py:41
+msgid "Encrypted backup: yes"
+msgstr "Copia cifrada: sí"
+
+#: src/movris_vault/cli.py:41
+msgid "Encrypted backup: no"
+msgstr "Copia cifrada: no"
+
+#: src/movris_vault/cli.py:69
+msgid "Repeat it: "
+msgstr "Repítela: "
+
+#: src/movris_vault/cli.py:76
+msgid "Password changed."
+msgstr "Contraseña cambiada."
+
+#: src/movris_vault/cli.py:76
+msgid "Encrypted backup turned on and password saved in the keyring."
+msgstr "Copia cifrada activada y contraseña guardada en el llavero."
+
+#: src/movris_vault/cli.py:85
+msgid "complete"
+msgstr "completa"
+
+#: src/movris_vault/cli.py:85
+msgid "INCOMPLETE"
+msgstr "INCOMPLETA"
+
+#: src/movris_vault/cli.py:86 src/movris_vault/ui/window.py:426
+msgid "encrypted"
+msgstr "cifrada"
+
+#: src/movris_vault/cli.py:86 src/movris_vault/ui/window.py:426
+msgid "not encrypted"
+msgstr "sin cifrar"
+
+#: src/movris_vault/cli.py:110
+msgid "Encryption has changed: the previous backup is set aside and put back if this one doesn't finish."
+msgstr "El cifrado ha cambiado: la copia anterior se aparta y vuelve a su sitio si esta no termina."
+
+#: src/movris_vault/cli.py:116
+msgid "The iPhone is preparing the data (this can take a couple of minutes)…"
+msgstr "El iPhone está preparando los datos (puede tardar un par de minutos)…"
+
+#: src/movris_vault/cli.py:134 src/movris_vault/ui/window.py:531
+msgid "iPhone backup in progress"
+msgstr "Copia del iPhone en curso"
+
+#: src/movris_vault/cli.py:147 src/movris_vault/ui/app.py:63
+msgid "Encrypted iPhone backups for Linux."
+msgstr "Copias de seguridad cifradas del iPhone en Linux."
+
+#: src/movris_vault/cli.py:149
+msgid "details of the connected iPhone"
+msgstr "datos del iPhone conectado"
+
+#: src/movris_vault/cli.py:150
+msgid "pair (tap “Trust” on the iPhone)"
+msgstr "emparejar (pulsar «Confiar» en el iPhone)"
+
+#: src/movris_vault/cli.py:151
+msgid "saved backups"
+msgstr "copias guardadas"
+
+#: src/movris_vault/cli.py:151
+msgid "make a backup"
+msgstr "hacer una copia"
+
+#: src/movris_vault/cli.py:152
+msgid "turn on encrypted backups or change their password"
+msgstr "activar la copia cifrada o cambiar su contraseña"
+
+#: src/movris_vault/cli.py:22
+msgid "Connecting to the iPhone…"
+msgstr "Conectando con el iPhone…"
+
+#: src/movris_vault/cli.py:23
+msgid "Enter your passcode on the iPhone so the backup can start."
+msgstr "Escribe tu código en el iPhone para que empiece la copia."
+
+#: src/movris_vault/cli.py:24
+msgid "Copying…"
+msgstr "Copiando…"
+
+#: src/movris_vault/cli.py:26
+msgid "Backup cancelled."
+msgstr "Copia cancelada."
+
+#: src/movris_vault/cli.py:40
+msgid "Used: {used} of {capacity}"
+msgstr "Usado: {used} de {capacity}"
+
+#: src/movris_vault/cli.py:66
+msgid "Current backup password: "
+msgstr "Contraseña actual de las copias: "
+
+#: src/movris_vault/cli.py:106
+msgid "The laptop is on battery: plug it in so it doesn't run out halfway."
+msgstr "El portátil va con batería: enchúfalo para que no se apague a mitad."
+
+#: src/movris_vault/cli.py:125
+msgid "(seems stuck: if it doesn't move, unplug the cable and plug it back in)"
+msgstr "(parece atascado: si no avanza, desconecta y vuelve a conectar el cable)"
+
+#: src/movris_vault/cli.py:154
+msgid "backup folder"
+msgstr "carpeta de copias"
+
+#: src/movris_vault/cli.py:25
+msgid "Backup finished."
+msgstr "Copia terminada."
+
+#: src/movris_vault/cli.py:33
+msgid "No iPhone connected."
+msgstr "No hay ningún iPhone conectado."
+
+#: src/movris_vault/cli.py:34
+msgid "The iPhone is plugged in but not responding: unplug the cable and plug it back in."
+msgstr "El iPhone está enchufado pero no responde: desconecta y vuelve a conectar el cable."
+
+#: src/movris_vault/cli.py:35
+msgid "The iPhone doesn't trust this computer yet (use `pair`)."
+msgstr "El iPhone no confía todavía en este ordenador (usa `pair`)."
+
+#: src/movris_vault/cli.py:83
+msgid "No backups in {folder}"
+msgstr "No hay copias en {folder}"
+
+#: src/movris_vault/cli.py:102
+msgid "Not enough space: about {needed} must be free and there is {free}."
+msgstr "Falta espacio: hacen falta unos {needed} libres y hay {free}."
+
+#: src/movris_vault/cli.py:141
+msgid "The previous backup is still in {path}; delete it whenever you like."
+msgstr "La copia anterior sigue en {path}; bórrala cuando quieras."
+
+#: src/movris_vault/cli.py:156
+msgid "full backup even if one already exists"
+msgstr "copia completa aunque ya exista una"
+
+#: src/movris_vault/cli.py:119
+msgid "{percent} · {received} · {speed}/s · {eta} left"
+msgstr "{percent} · {received} · {speed}/s · quedan {eta}"
+
+#: src/movris_vault/core/backup.py:213
+msgid "The backup didn't finish properly"
+msgstr "La copia no ha terminado bien"
+
+#: src/movris_vault/core/backup.py:214
+msgid "The iPhone stopped sending data before the end. Try again."
+msgstr "El iPhone dejó de enviar datos antes de acabar. Vuelve a intentarlo."
+
+#: src/movris_vault/core/backup.py:223
+msgid "If the next backup doesn't start, unplug the cable and plug it back in."
+msgstr "Si la próxima copia no arranca, desconecta y vuelve a conectar el cable."
+
+#: src/movris_vault/core/encryption.py:31
+msgid "The two passwords don't match."
+msgstr "Las dos contraseñas no coinciden."
+
+#: src/movris_vault/core/encryption.py:29
+msgid "It must have at least {n} characters."
+msgstr "Tiene que tener al menos {n} caracteres."
+
+#: src/movris_vault/core/encryption.py:51
+msgid "Backup password for {device} (Movris Vault)"
+msgstr "Contraseña de las copias de {device} (Movris Vault)"
+
+#: src/movris_vault/core/encryption.py:87
+msgid "The iPhone didn't turn on encryption"
+msgstr "El iPhone no ha activado el cifrado"
+
+#: src/movris_vault/core/encryption.py:88
+msgid "Unlock it, enter your passcode if it asks for it, and try again."
+msgstr "Desbloquéalo, escribe tu código si te lo pide y vuelve a intentarlo."
+
+#: src/movris_vault/core/encryption.py:83
+msgid "The iPhone didn't accept the change"
+msgstr "El iPhone no ha aceptado el cambio"
+
+#: src/movris_vault/core/encryption.py:84
+msgid "The current password may not be the right one."
+msgstr "Puede que la contraseña anterior no sea la correcta."
+
+#: src/movris_vault/core/errors.py:35
+msgid "Lost the connection to the iPhone"
+msgstr "Se ha perdido la conexión con el iPhone"
+
+#: src/movris_vault/core/errors.py:36
+msgid "Check that the cable is still plugged in and try again."
+msgstr "Comprueba que el cable sigue bien conectado y vuelve a intentarlo."
+
+#: src/movris_vault/core/errors.py:42
+msgid "The backup was cancelled on the iPhone"
+msgstr "La copia se ha cancelado desde el iPhone"
+
+#: src/movris_vault/core/errors.py:43
+msgid "If you didn't mean to, start again and don't touch the iPhone until it finishes."
+msgstr "Si no querías cancelarla, vuelve a empezar y no toques el iPhone hasta que termine."
+
+#: src/movris_vault/core/errors.py:74
+msgid "The backup couldn't be completed"
+msgstr "La copia no se ha podido completar"
+
+#: src/movris_vault/core/errors.py:51
+msgid "No iPhone found"
+msgstr "No encuentro ningún iPhone"
+
+#: src/movris_vault/core/errors.py:51
+msgid "Plug it in with the USB cable and unlock it."
+msgstr "Conéctalo con el cable USB y desbloquéalo."
+
+#: src/movris_vault/core/errors.py:55
+msgid "The iPhone is locked"
+msgstr "El iPhone está bloqueado"
+
+#: src/movris_vault/core/errors.py:55
+msgid "Unlock it with your passcode and try again."
+msgstr "Desbloquéalo con tu código y vuelve a intentarlo."
+
+#: src/movris_vault/core/errors.py:58
+msgid "“Don't Trust” was tapped on the iPhone"
+msgstr "En el iPhone se pulsó «No confiar»"
+
+#: src/movris_vault/core/errors.py:59
+msgid "Unplug the cable, plug it back in and tap “Trust” this time."
+msgstr "Desconecta y vuelve a conectar el cable, y esta vez pulsa «Confiar»."
+
+#: src/movris_vault/core/errors.py:62
+msgid "The iPhone doesn't trust this computer yet"
+msgstr "El iPhone todavía no confía en este ordenador"
+
+#: src/movris_vault/core/errors.py:62
+msgid "Tap “Trust” on the iPhone."
+msgstr "Pulsa «Confiar» en el iPhone."
+
+#: src/movris_vault/core/errors.py:65
+msgid "The disk is full"
+msgstr "No queda espacio en el disco"
+
+#: src/movris_vault/core/errors.py:66
+msgid "Free up some space or choose another folder, for example on an external disk."
+msgstr "Libera espacio o elige otra carpeta, por ejemplo en un disco externo."
+
+#: src/movris_vault/core/errors.py:70
+msgid "Can't write to the backup folder"
+msgstr "No puedo escribir en la carpeta de copias"
+
+#: src/movris_vault/core/errors.py:75
+msgid "Technical detail: {detail}"
+msgstr "Detalle técnico: {detail}"
+
+#: src/movris_vault/core/errors.py:71
+msgid "Check the permissions of {path}."
+msgstr "Revisa los permisos de {path}."
+
+#: src/movris_vault/fmt.py:33
+msgid "calculating…"
+msgstr "calculando…"
+
+#: src/movris_vault/fmt.py:36
+msgid "less than a minute"
+msgstr "menos de un minuto"
+
+#: src/movris_vault/fmt.py:44
+msgid "never"
+msgstr "nunca"
+
+#: src/movris_vault/fmt.py:50
+msgid "yesterday"
+msgstr "ayer"
+
+#: src/movris_vault/fmt.py:39
+msgid "{hours} h {minutes:02d} min"
+msgstr "{hours} h {minutes:02d} min"
+
+#: src/movris_vault/fmt.py:54
+msgid "{n} month ago"
+msgid_plural "{n} months ago"
+msgstr[0] "hace {n} mes"
+msgstr[1] "hace {n} meses"
+
+#: src/movris_vault/fmt.py:38
+msgid "{minutes} min"
+msgstr "{minutes} min"
+
+#: src/movris_vault/fmt.py:48
+msgid "today at {time}"
+msgstr "hoy a las {time}"
+
+#: src/movris_vault/fmt.py:52
+msgid "{n} day ago"
+msgid_plural "{n} days ago"
+msgstr[0] "hace {n} día"
+msgstr[1] "hace {n} días"
+
+#: src/movris_vault/ui/app.py:93
+msgid "Automatic (system)"
+msgstr "Automático (el del sistema)"
+
+#: src/movris_vault/ui/app.py:97
+msgid "Language"
+msgstr "Idioma"
+
+#: src/movris_vault/ui/app.py:98
+msgid "About Movris Vault"
+msgstr "Acerca de Movris Vault"
+
+#: src/movris_vault/ui/app.py:18
+msgid "The window libraries (GTK 4 and libadwaita) are missing. Install them with:"
+msgstr "Faltan las librerías de la ventana (GTK 4 y libadwaita). Instálalas con:"
+
+#: src/movris_vault/ui/window.py:137
+msgid "Back up now"
+msgstr "Hacer copia ahora"
+
+#: src/movris_vault/ui/window.py:181 src/movris_vault/ui/window.py:225 src/movris_vault/ui/window.py:350 src/movris_vault/ui/window.py:534
+msgid "Cancel"
+msgstr "Cancelar"
+
+#: src/movris_vault/ui/window.py:191
+msgid "Back"
+msgstr "Volver"
+
+#: src/movris_vault/ui/window.py:239
+msgid "OK"
+msgstr "Entendido"
+
+#: src/movris_vault/ui/window.py:325
+msgid "Turn on encrypted backup"
+msgstr "Activar la copia cifrada"
+
+#: src/movris_vault/ui/window.py:326
+msgid "This way the backup also keeps passwords, Health data and WhatsApp.\n\nWe recommend using the same password you use to log in to this computer, so there's only one to remember. It will be saved in the computer's keyring.\n\nThe next backup will be a full one and can take several hours. The current backup is kept until the new one finishes."
+msgstr "Así la copia guarda también las contraseñas, los datos de Salud y los de WhatsApp.\n\nTe recomendamos usar la misma contraseña con la que entras en el ordenador: así solo tienes que recordar una. Se guardará en el llavero del ordenador.\n\nLa próxima copia será completa y puede tardar varias horas. La copia actual se conserva hasta que la nueva termine."
+
+#: src/movris_vault/ui/window.py:332
+msgid "Change the backup password"
+msgstr "Cambiar la contraseña de las copias"
+
+#: src/movris_vault/ui/window.py:333
+msgid "If you have changed the password you use to log in to this computer, enter the new one here so they stay the same."
+msgstr "Si has cambiado la contraseña con la que entras en el ordenador, escribe aquí la nueva para que sigan siendo la misma."
+
+#: src/movris_vault/ui/window.py:485
+msgid "Delete the previous backup?"
+msgstr "¿Borrar la copia anterior?"
+
+#: src/movris_vault/ui/window.py:487
+msgid "Delete"
+msgstr "Borrar"
+
+#: src/movris_vault/ui/window.py:548
+msgid "The iPhone is preparing the data. This can take a couple of minutes."
+msgstr "El iPhone está preparando los datos. Puede tardar un par de minutos."
+
+#: src/movris_vault/ui/window.py:592
+msgid "Cancel the backup?"
+msgstr "¿Cancelar la copia?"
+
+#: src/movris_vault/ui/window.py:592
+msgid "The backup won't be complete and will have to be done again."
+msgstr "La copia no quedará completa y habrá que hacerla otra vez."
+
+#: src/movris_vault/ui/window.py:593
+msgid "Cancel backup"
+msgstr "Cancelar copia"
+
+#: src/movris_vault/ui/window.py:37
+msgid "Connect the iPhone"
+msgstr "Conecta el iPhone"
+
+#: src/movris_vault/ui/window.py:37
+msgid "Use the USB cable and unlock it."
+msgstr "Usa el cable USB y desbloquéalo."
+
+#: src/movris_vault/ui/window.py:40
+msgid "Unplug the cable and plug it back in"
+msgstr "Desconecta y vuelve a conectar el cable"
+
+#: src/movris_vault/ui/window.py:41
+msgid "The iPhone is plugged in but not responding. This sometimes happens after the laptop has slept."
+msgstr "El iPhone está enchufado pero no responde. Pasa a veces cuando el portátil se ha dormido."
+
+#: src/movris_vault/ui/window.py:45
+msgid "Look at the iPhone"
+msgstr "Mira el iPhone"
+
+#: src/movris_vault/ui/window.py:46
+msgid "Tap “Trust” and enter your passcode.\nYou only need to do this the first time."
+msgstr "Pulsa «Confiar» y escribe tu código.\nSolo hace falta la primera vez."
+
+#: src/movris_vault/ui/window.py:53
+msgid "Preparing the backup…"
+msgstr "Preparando la copia…"
+
+#: src/movris_vault/ui/window.py:53
+msgid "Connecting to the iPhone."
+msgstr "Conectando con el iPhone."
+
+#: src/movris_vault/ui/window.py:56
+msgid "Enter your passcode on the iPhone"
+msgstr "Escribe tu código en el iPhone"
+
+#: src/movris_vault/ui/window.py:57
+msgid "The iPhone asks for it to start the backup."
+msgstr "El iPhone lo pide para empezar la copia."
+
+#: src/movris_vault/ui/window.py:59
+msgid "Backing up the iPhone…"
+msgstr "Copiando el iPhone…"
+
+#: src/movris_vault/ui/window.py:100
+msgid "The laptop is on battery: plug it in before backing up."
+msgstr "El portátil va con batería: enchúfalo antes de hacer la copia."
+
+#: src/movris_vault/ui/window.py:145
+msgid "Encryption"
+msgstr "Cifrado"
+
+#: src/movris_vault/ui/window.py:146
+msgid "Encrypted backup"
+msgstr "Copia cifrada"
+
+#: src/movris_vault/ui/window.py:153
+msgid "Saved backups"
+msgstr "Copias guardadas"
+
+#: src/movris_vault/ui/window.py:157
+msgid "Where they are saved"
+msgstr "Dónde se guardan"
+
+#: src/movris_vault/ui/window.py:158
+msgid "Folder"
+msgstr "Carpeta"
+
+#: src/movris_vault/ui/window.py:159
+msgid "Change…"
+msgstr "Cambiar…"
+
+#: src/movris_vault/ui/window.py:176
+msgid "It doesn't seem to be moving. If it stays like this for a few minutes, cancel, unplug the cable and plug it back in."
+msgstr "Parece que no avanza. Si sigue así unos minutos, cancela, desconecta el cable y vuelve a conectarlo."
+
+#: src/movris_vault/ui/window.py:195
+msgid "Delete the previous unencrypted backup"
+msgstr "Borrar la copia anterior sin cifrar"
+
+#: src/movris_vault/ui/window.py:302
+msgid "On: the backup also keeps passwords, Health and WhatsApp."
+msgstr "Activada: la copia guarda también contraseñas, Salud y WhatsApp."
+
+#: src/movris_vault/ui/window.py:303
+msgid "Change password…"
+msgstr "Cambiar contraseña…"
+
+#: src/movris_vault/ui/window.py:306
+msgid "Off: the backup doesn't keep passwords, Health or WhatsApp data."
+msgstr "Desactivada: la copia no guarda contraseñas, ni datos de Salud ni de WhatsApp."
+
+#: src/movris_vault/ui/window.py:307
+msgid "Turn on…"
+msgstr "Activar…"
+
+#: src/movris_vault/ui/window.py:337
+msgid "Current backup password"
+msgstr "Contraseña actual de las copias"
+
+#: src/movris_vault/ui/window.py:340
+msgid "New password"
+msgstr "Contraseña nueva"
+
+#: src/movris_vault/ui/window.py:341
+msgid "Repeat it"
+msgstr "Repítela"
+
+#: src/movris_vault/ui/window.py:351
+msgid "Turn on"
+msgstr "Activar"
+
+#: src/movris_vault/ui/window.py:351
+msgid "Change"
+msgstr "Cambiar"
+
+#: src/movris_vault/ui/window.py:378
+msgid "Changing the password…"
+msgstr "Cambiando la contraseña…"
+
+#: src/movris_vault/ui/window.py:378
+msgid "Turning on encryption…"
+msgstr "Activando el cifrado…"
+
+#: src/movris_vault/ui/window.py:434
+msgid "Open folder"
+msgstr "Abrir carpeta"
+
+#: src/movris_vault/ui/window.py:454
+msgid "There's no backup of this iPhone yet"
+msgstr "Todavía no hay ninguna copia de este iPhone"
+
+#: src/movris_vault/ui/window.py:462
+msgid "Since encryption has changed, the next backup will be a full one and can take several hours. The current backup is kept until the new one finishes."
+msgstr "Como ha cambiado el cifrado, la próxima copia será completa y puede tardar varias horas. La copia actual se conserva hasta que la nueva termine."
+
+#: src/movris_vault/ui/window.py:490
+msgid "Choose where to save backups"
+msgstr "Elige dónde guardar las copias"
+
+#: src/movris_vault/ui/window.py:514
+msgid "Not enough space"
+msgstr "No hay espacio suficiente"
+
+#: src/movris_vault/ui/window.py:520
+msgid "The laptop is on battery"
+msgstr "El portátil va con batería"
+
+#: src/movris_vault/ui/window.py:521
+msgid "The backup can take a long time. If the battery runs out halfway, it will have to be redone."
+msgstr "La copia puede tardar mucho. Si se queda sin batería a mitad, habrá que repetirla."
+
+#: src/movris_vault/ui/window.py:522
+msgid "Start anyway"
+msgstr "Empezar igualmente"
+
+#: src/movris_vault/ui/window.py:593
+msgid "Keep backing up"
+msgstr "Seguir copiando"
+
+#: src/movris_vault/ui/window.py:606
+msgid "Backup finished!"
+msgstr "¡Copia terminada!"
+
+#: src/movris_vault/ui/window.py:98
+msgid "Main menu"
+msgstr "Menú principal"
+
+#: src/movris_vault/ui/window.py:180
+msgid "Don't unplug the iPhone."
+msgstr "No desconectes el iPhone."
+
+#: src/movris_vault/ui/window.py:291
+msgid "iOS {version} · {used} used of {capacity}"
+msgstr "iOS {version} · {used} usados de {capacity}"
+
+#: src/movris_vault/ui/window.py:360
+msgid "The current password is missing."
+msgstr "Falta la contraseña actual."
+
+#: src/movris_vault/ui/window.py:407
+msgid "{folder}\n{free} free"
+msgstr "{folder}\n{free} libres"
+
+#: src/movris_vault/ui/window.py:416
+msgid "No backups yet"
+msgstr "Todavía no hay ninguna copia"
+
+#: src/movris_vault/ui/window.py:429
+msgid "Didn't finish · {details}"
+msgstr "No terminó · {details}"
+
+#: src/movris_vault/ui/window.py:430
+msgid "{device} (previous backup)"
+msgstr "{device} (copia anterior)"
+
+#: src/movris_vault/ui/window.py:439
+msgid "Delete this backup"
+msgstr "Borrar esta copia"
+
+#: src/movris_vault/ui/window.py:456
+msgid "The last backup didn't finish"
+msgstr "La última copia no terminó"
+
+#: src/movris_vault/ui/window.py:466
+msgid "Only what changed since last time will be copied."
+msgstr "Solo se copiará lo que ha cambiado desde la última vez."
+
+#: src/movris_vault/ui/window.py:468
+msgid "The first backup can take several hours."
+msgstr "La primera copia puede tardar varias horas."
+
+#: src/movris_vault/ui/window.py:479
+msgid "Couldn't delete it"
+msgstr "No se ha podido borrar"
+
+#: src/movris_vault/ui/window.py:486
+msgid "{name} will be deleted for good. The new backup is not touched."
+msgstr "Se borrará {name} para siempre. La copia nueva no se toca."
+
+#: src/movris_vault/ui/window.py:522
+msgid "Wait"
+msgstr "Esperar"
+
+#: src/movris_vault/ui/window.py:560
+msgid "Comparing with the previous backup…"
+msgstr "Comparando con la copia anterior…"
+
+#: src/movris_vault/ui/window.py:588
+msgid "Cancelling…"
+msgstr "Cancelando…"
+
+#: src/movris_vault/ui/window.py:607
+msgid "Saved in {folder}.\nYou can unplug the iPhone now."
+msgstr "Guardada en {folder}.\nYa puedes desconectar el iPhone."
+
+#: src/movris_vault/ui/window.py:609
+msgid "The previous unencrypted backup is still saved. It's no longer needed: you can delete it."
+msgstr "La copia anterior sin cifrar sigue guardada. Ya no hace falta: puedes borrarla."
+
+#: src/movris_vault/ui/window.py:611
+msgid "Backup cancelled"
+msgstr "Copia cancelada"
+
+#: src/movris_vault/ui/window.py:612
+msgid "The backup was not completed."
+msgstr "La copia no se ha completado."
+
+#: src/movris_vault/ui/window.py:391
+msgid "Password changed"
+msgstr "Contraseña cambiada"
+
+#: src/movris_vault/ui/window.py:391
+msgid "It has been saved in the computer's keyring."
+msgstr "Se ha guardado en el llavero del ordenador."
+
+#: src/movris_vault/ui/window.py:393
+msgid "Encrypted backup turned on"
+msgstr "Copia cifrada activada"
+
+#: src/movris_vault/ui/window.py:394
+msgid "The password has been saved in the computer's keyring.\n\nNow press “Back up now”. It will be a full backup and can take several hours: keep the laptop plugged in."
+msgstr "La contraseña se ha guardado en el llavero del ordenador.\n\nAhora pulsa «Hacer copia ahora». Será una copia completa y puede tardar varias horas: deja el portátil enchufado."
+
+#: src/movris_vault/ui/window.py:515
+msgid "About {needed} must be free and there is only {free}.\nFree up some space or choose another folder, for example on an external disk."
+msgstr "Hacen falta unos {needed} libres y solo hay {free}.\nLibera espacio o elige otra carpeta, por ejemplo en un disco externo."
+
+#: src/movris_vault/ui/window.py:564
+msgid "Only what changed is being copied."
+msgstr "Solo se copia lo que ha cambiado."
+
+#: src/movris_vault/ui/window.py:458
+msgid "Last backup: {when}"
+msgstr "Última copia: {when}"
+
+#: src/movris_vault/ui/window.py:562
+msgid "{received} copied · {speed}/s"
+msgstr "{received} copiados · {speed}/s"
+
+#: src/movris_vault/ui/window.py:566
+msgid "{eta} left"
+msgstr "quedan {eta}"

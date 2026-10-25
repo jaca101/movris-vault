@@ -1,12 +1,15 @@
 [Desktop Entry]
 Type=Application
 Name=Movris Vault
-GenericName=Copia de seguridad del iPhone
-Comment=Haz una copia de seguridad del iPhone con un botón
+GenericName=iPhone Backup
+GenericName[es]=Copia de seguridad del iPhone
+Comment=Encrypted iPhone backups with one button
+Comment[es]=Copias de seguridad cifradas del iPhone con un botón
 Exec=@BINDIR@/movris-vault
 Icon=io.github.jaca101.MovrisVault
 Terminal=false
 Categories=Utility;Archiving;
-Keywords=iPhone;iPad;copia;seguridad;backup;respaldo;
+Keywords=iPhone;iPad;backup;encrypted;restore;
+Keywords[es]=iPhone;iPad;copia;seguridad;backup;respaldo;cifrada;
 StartupNotify=true
 StartupWMClass=io.github.jaca101.MovrisVault

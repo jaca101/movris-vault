@@ -7,7 +7,7 @@ backup Finder or iTunes makes, without a terminal. Plug the iPhone in, press *Ba
 type your passcode on the iPhone, done.
 
 > **Status:** early (0.1). It makes real backups and has been tested on Linux Mint 22 with an
-> iPhone on iOS 27. The interface is in Spanish for now; English is next.
+> iPhone on iOS 27. Available in English and Spanish.
 
 ## Features
 
@@ -20,6 +20,7 @@ type your passcode on the iPhone, done.
   finishes, and restored automatically if it fails.
 - **Stays awake:** blocks suspend while backing up, and warns if the laptop is on battery.
 - **Clear errors** instead of stack traces: cable unplugged, iPhone locked, disk full…
+- **English and Spanish**, following your system language or chosen from the menu (☰ → Language).
 - Backups live in a normal folder (`~/iPhoneBackup` by default, or an external disk), in the
   standard format other tools understand.
 
@@ -55,16 +56,24 @@ and `usbmuxd`, using Apple's backup protocol (`mobilebackup2`). Encryption is do
 itself: the password is only needed to restore or change it, never to make a backup.
 Nothing leaves your computer.
 
+## Translations
+
+Texts are written in English in the code and translated in `src/movris_vault/locale/<language>.po`
+(standard gettext format; Poedit works). To add a language: run
+`python3 tools/extract_strings.py --pot`, translate the `.pot` into `<code>.po`, add the code to
+`LANGUAGES` in `src/movris_vault/i18n.py` and run `python3 tools/extract_strings.py` to check nothing is missing.
+
 ## Not yet
 
 - Restoring a backup to an iPhone, or extracting photos and files from one.
 - Automatic backups when the iPhone is plugged in.
-- English interface, Flatpak.
+- Flatpak.
 
 ## En español
 
 Movris Vault hace copias de seguridad cifradas del iPhone en Linux con un botón. Instálala con
-`packaging/install.sh --desktop-shortcut` y búscala en el menú. La interfaz está en español.
+`packaging/install.sh --desktop-shortcut` y búscala en el menú. Sale en español si tu sistema
+está en español, y se puede cambiar en el menú (☰ → Idioma).
 Si activas el cifrado, te sugiere usar la misma contraseña con la que entras en el ordenador y
 la guarda en el llavero; apúntala igualmente, porque sin ella no se puede restaurar la copia.
 

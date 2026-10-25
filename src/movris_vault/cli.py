@@ -11,32 +11,34 @@ import sys
 from pathlib import Path
 
 from . import fmt
-from .core import device, encryption, power, storage
+from .core import device, encryption, power, settings, storage
 from .core.backup import BackupJob, Phase, Snapshot, encryption_changed, next_backup_is_incremental
 from .core.errors import FriendlyError, friendly
+from .i18n import _, set_language
 
-PHASE_TEXT = {
-    Phase.CONNECTING: "Conectando con el iPhone…",
-    Phase.WAITING_PASSCODE: "Escribe tu código en el iPhone para que empiece la copia.",
-    Phase.COPYING: "Copiando…",
-    Phase.DONE: "✅ Copia terminada.",
-    Phase.CANCELLED: "Copia cancelada.",
-}
+
+def phase_text(phase: Phase) -> str:
+    return {
+        Phase.CONNECTING: _("Connecting to the iPhone…"),
+        Phase.WAITING_PASSCODE: _("Enter your passcode on the iPhone so the backup can start."),
+        Phase.COPYING: _("Copying…"),
+        Phase.DONE: "✅ " + _("Backup finished."),
+        Phase.CANCELLED: _("Backup cancelled."),
+    }.get(phase, "")
 
 
 def print_status(status: device.DeviceStatus) -> None:
-    messages = {
-        device.DeviceState.ABSENT: "No hay ningún iPhone conectado.",
-        device.DeviceState.RECONNECT: "El iPhone está enchufado pero no responde: desconecta y vuelve a conectar el cable.",
-        device.DeviceState.UNTRUSTED: "El iPhone no confía todavía en este ordenador (usa `pair`).",
-    }
     if status.info is None:
-        print(messages[status.state])
+        print({
+            device.DeviceState.ABSENT: _("No iPhone connected."),
+            device.DeviceState.RECONNECT: _("The iPhone is plugged in but not responding: unplug the cable and plug it back in."),
+            device.DeviceState.UNTRUSTED: _("The iPhone doesn't trust this computer yet (use `pair`)."),
+        }[status.state])
         return
     info = status.info
     print(f"{info.name} ({info.product_type}, iOS {info.ios_version})")
-    print(f"Usado: {fmt.size(info.used)} de {fmt.size(info.capacity)}")
-    print(f"Copia cifrada: {'sí' if info.encrypted else 'no'}")
+    print(_("Used: {used} of {capacity}").format(used=fmt.size(info.used), capacity=fmt.size(info.capacity)))
+    print(_("Encrypted backup: yes") if info.encrypted else _("Encrypted backup: no"))
 
 
 async def cmd_info(_args) -> int:
@@ -46,10 +48,10 @@ async def cmd_info(_args) -> int:
 
 
 async def cmd_pair(_args) -> int:
-    print("Mira el iPhone: pulsa «Confiar» y escribe tu código.")
+    print(_("Look at the iPhone: tap “Trust” and enter your passcode."))
     lockdown = await device.connect(pair=True, pair_timeout=120)
     await lockdown.close()
-    print("Emparejado.")
+    print(_("Paired."))
     return 0
 
 
@@ -61,27 +63,28 @@ async def cmd_encrypt(args) -> int:
         await lockdown.close()
     old = ""
     if info.encrypted:
-        old = encryption.lookup_password(info.udid) or getpass.getpass("Contraseña actual de las copias: ")
-    print("Consejo: usa la misma contraseña con la que entras en el ordenador; así solo tienes que recordar una.")
-    new = getpass.getpass("Contraseña nueva: ")
-    problem = encryption.check_new_password(new, getpass.getpass("Repítela: "))
+        old = encryption.lookup_password(info.udid) or getpass.getpass(_("Current backup password: "))
+    print(_("Tip: use the same password you use to log in to this computer, so there's only one to remember."))
+    new = getpass.getpass(_("New password: "))
+    problem = encryption.check_new_password(new, getpass.getpass(_("Repeat it: ")))
     if problem:
         print(problem)
         return 1
-    print("Si el iPhone te pide el código, escríbelo.")
+    print(_("If the iPhone asks for your passcode, enter it."))
     await encryption.set_password(info.udid, args.dest, new, old=old)
     encryption.store_password(info.udid, info.name, new)
-    print("Copia cifrada activada y contraseña guardada en el llavero." if not old else "Contraseña cambiada.")
+    print(_("Password changed.") if old else _("Encrypted backup turned on and password saved in the keyring."))
     return 0
 
 
 def cmd_list(args) -> int:
     entries = storage.list_backups(args.dest)
     if not entries:
-        print(f"No hay copias en {args.dest}")
+        print(_("No backups in {folder}").format(folder=args.dest))
     for e in entries:
-        state = "completa" if e.complete else "INCOMPLETA"
-        print(f"{e.device_name} · iOS {e.ios_version} · {fmt.ago(e.date)} · {state} · {'cifrada' if e.encrypted else 'sin cifrar'}")
+        state = _("complete") if e.complete else _("INCOMPLETE")
+        encrypted = _("encrypted") if e.encrypted else _("not encrypted")
+        print(f"{e.device_name} · iOS {e.ios_version} · {fmt.ago(e.date)} · {state} · {encrypted}")
         print(f"   {e.path}")
     return 0
 
@@ -96,26 +99,30 @@ async def cmd_backup(args) -> int:
     needed = storage.space_needed(info.used, previous)
     free = storage.free_space(args.dest)
     if free < needed:
-        print(f"Falta espacio: hacen falta unos {fmt.size(needed)} libres y hay {fmt.size(free)}.")
+        print(_("Not enough space: about {needed} must be free and there is {free}.").format(
+            needed=fmt.size(needed), free=fmt.size(free)))
         return 1
     if power.on_battery():
-        print("⚠️  El portátil va con batería: enchúfalo para que no se apague a mitad.")
-    print(f"Copia {'incremental' if previous else 'completa'} de {info.name} en {args.dest}")
+        print("⚠️  " + _("The laptop is on battery: plug it in so it doesn't run out halfway."))
+    kind = _("Incremental backup of {device} in {folder}") if previous else _("Full backup of {device} in {folder}")
+    print(kind.format(device=info.name, folder=args.dest))
     if encryption_changed(args.dest, info.udid, info.encrypted):
-        print("El cifrado ha cambiado: la copia anterior se aparta y vuelve a su sitio si esta no termina.")
+        print(_("Encryption has changed: the previous backup is set aside and put back if this one doesn't finish."))
 
     last_line = [""]
 
     def on_update(snap: Snapshot) -> None:
         if snap.phase == Phase.COPYING and not snap.received:
-            line = "El iPhone está preparando los datos (puede tardar un par de minutos)…"
+            line = _("The iPhone is preparing the data (this can take a couple of minutes)…")
         elif snap.phase == Phase.COPYING:
-            percent = "—" if snap.percent is None else f"{snap.percent:.1f} %".replace(".", ",")
-            line = f"{percent} · {fmt.size(snap.received)} · {fmt.size(snap.speed)}/s · quedan {fmt.duration(snap.eta)}"
+            percent = "—" if snap.percent is None else fmt.percent(snap.percent, 1)
+            line = _("{percent} · {received} · {speed}/s · {eta} left").format(
+                percent=percent, received=fmt.size(snap.received), speed=fmt.size(snap.speed),
+                eta=fmt.duration(snap.eta))
         else:
-            line = PHASE_TEXT.get(snap.phase, "")
+            line = phase_text(snap.phase)
         if snap.stalled:
-            line += "  (parece atascado: si no avanza, desconecta y vuelve a conectar el cable)"
+            line += "  " + _("(seems stuck: if it doesn't move, unplug the cable and plug it back in)")
         if line and line != last_line[0]:
             last_line[0] = line
             print(line, flush=True)
@@ -124,28 +131,29 @@ async def cmd_backup(args) -> int:
     loop = asyncio.get_running_loop()
     for sig in (signal.SIGINT, signal.SIGTERM):
         loop.add_signal_handler(sig, job.cancel)
-    with power.session_inhibit("Copia del iPhone en curso"):
+    with power.session_inhibit(_("iPhone backup in progress")):
         snap = await job.run()
     if snap.error:
         print(f"❌ {snap.error.title}\n   {snap.error.hint}")
     if snap.hint:
         print(snap.hint)
     if snap.phase == Phase.DONE and snap.set_aside:
-        print(f"La copia anterior sigue en {snap.set_aside}; bórrala cuando quieras.")
+        print(_("The previous backup is still in {path}; delete it whenever you like.").format(path=snap.set_aside))
     return 0 if snap.phase == Phase.DONE else 1
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="movris-vault", description="Copias de seguridad del iPhone.")
+    set_language(settings.load().language)
+    parser = argparse.ArgumentParser(prog="movris-vault", description=_("Encrypted iPhone backups for Linux."))
     sub = parser.add_subparsers(dest="command")
-    sub.add_parser("info", help="datos del iPhone conectado")
-    sub.add_parser("pair", help="emparejar (pulsar «Confiar» en el iPhone)")
-    for name, help_text in (("list", "copias guardadas"), ("backup", "hacer una copia"),
-                            ("encrypt", "activar la copia cifrada o cambiar su contraseña")):
+    sub.add_parser("info", help=_("details of the connected iPhone"))
+    sub.add_parser("pair", help=_("pair (tap “Trust” on the iPhone)"))
+    for name, help_text in (("list", _("saved backups")), ("backup", _("make a backup")),
+                            ("encrypt", _("turn on encrypted backups or change their password"))):
         p = sub.add_parser(name, help=help_text)
-        p.add_argument("--dest", type=Path, default=storage.DEFAULT_ROOT, help="carpeta de copias")
+        p.add_argument("--dest", type=Path, default=settings.load().root, help=_("backup folder"))
         if name == "backup":
-            p.add_argument("--full", action="store_true", help="copia completa aunque ya exista una")
+            p.add_argument("--full", action="store_true", help=_("full backup even if one already exists"))
     args = parser.parse_args(argv)
     # pymobiledevice3 avisa en inglés de cosas que ya contamos nosotros
     logging.getLogger("pymobiledevice3").setLevel(logging.ERROR)

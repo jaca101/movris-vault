@@ -3,3 +3,4 @@
 __version__ = "0.1.0"
 APP_ID = "io.github.jaca101.MovrisVault"
 APP_NAME = "Movris Vault"
+WEBSITE = "https://github.com/jaca101/movris-vault"

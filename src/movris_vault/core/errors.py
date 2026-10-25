@@ -16,9 +16,11 @@ from pymobiledevice3.exceptions import (
     UserDeniedPairingError,
 )
 
+from ..i18n import _
+
 
 class FriendlyError(Exception):
-    """Error con un título corto y una pista de qué hacer."""
+    """Error con un título corto y una pista de qué hacer (ya traducidos)."""
 
     def __init__(self, title: str, hint: str = "") -> None:
         super().__init__(title)
@@ -26,37 +28,49 @@ class FriendlyError(Exception):
         self.hint = hint
 
 
-DISCONNECTED = FriendlyError(
-    "Se ha perdido la conexión con el iPhone",
-    "Comprueba que el cable sigue bien conectado y vuelve a intentarlo.",
-)
-CANCELLED_ON_DEVICE = FriendlyError(
-    "La copia se ha cancelado desde el iPhone",
-    "Si no querías cancelarla, vuelve a empezar y no toques el iPhone hasta que termine.",
-)
+# Funciones y no constantes: el texto tiene que salir en el idioma elegido en ese momento
+
+def disconnected() -> FriendlyError:
+    return FriendlyError(
+        _("Lost the connection to the iPhone"),
+        _("Check that the cable is still plugged in and try again."),
+    )
+
+
+def cancelled_on_device() -> FriendlyError:
+    return FriendlyError(
+        _("The backup was cancelled on the iPhone"),
+        _("If you didn't mean to, start again and don't touch the iPhone until it finishes."),
+    )
 
 
 def friendly(exc: BaseException) -> FriendlyError:
     if isinstance(exc, FriendlyError):
         return exc
     if isinstance(exc, (NoDeviceConnectedError, ConnectionFailedToUsbmuxdError)):
-        return FriendlyError("No encuentro ningún iPhone", "Conéctalo con el cable USB y desbloquéalo.")
+        return FriendlyError(_("No iPhone found"), _("Plug it in with the USB cable and unlock it."))
     if isinstance(exc, ConnectionTerminatedError):
-        return DISCONNECTED
+        return disconnected()
     if isinstance(exc, (PasswordRequiredError, PasscodeRequiredError)):
-        return FriendlyError("El iPhone está bloqueado", "Desbloquéalo con tu código y vuelve a intentarlo.")
+        return FriendlyError(_("The iPhone is locked"), _("Unlock it with your passcode and try again."))
     if isinstance(exc, UserDeniedPairingError):
         return FriendlyError(
-            "En el iPhone se pulsó «No confiar»",
-            "Desconecta y vuelve a conectar el cable, y esta vez pulsa «Confiar».",
+            _("“Don't Trust” was tapped on the iPhone"),
+            _("Unplug the cable, plug it back in and tap “Trust” this time."),
         )
     if isinstance(exc, (NotPairedError, PairingDialogResponsePendingError)):
-        return FriendlyError("El iPhone todavía no confía en este ordenador", "Pulsa «Confiar» en el iPhone.")
+        return FriendlyError(_("The iPhone doesn't trust this computer yet"), _("Tap “Trust” on the iPhone."))
     if isinstance(exc, NotEnoughDiskSpaceError) or (isinstance(exc, OSError) and exc.errno == errno.ENOSPC):
         return FriendlyError(
-            "No queda espacio en el disco",
-            "Libera espacio o elige otra carpeta, por ejemplo en un disco externo.",
+            _("The disk is full"),
+            _("Free up some space or choose another folder, for example on an external disk."),
         )
     if isinstance(exc, PermissionError):
-        return FriendlyError("No puedo escribir en la carpeta de copias", f"Revisa los permisos de {exc.filename}.")
-    return FriendlyError("La copia no se ha podido completar", f"Detalle técnico: {type(exc).__name__}: {exc}")
+        return FriendlyError(
+            _("Can't write to the backup folder"),
+            _("Check the permissions of {path}.").format(path=exc.filename),
+        )
+    return FriendlyError(
+        _("The backup couldn't be completed"),
+        _("Technical detail: {detail}").format(detail=f"{type(exc).__name__}: {exc}"),
+    )

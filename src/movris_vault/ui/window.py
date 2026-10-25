@@ -22,35 +22,42 @@ from ..core.backup import (
 from ..core.device import DeviceState, DeviceStatus
 from ..core.errors import friendly
 from ..core.runner import AsyncRunner
+from ..i18n import _
+from .app import main_menu
 
 POLL_SECONDS = 2
 # usbmuxd tarda un momento en ver un iPhone recién enchufado: no pedir reconectar a la primera
 RECONNECT_CONFIRM_POLLS = 3
 PAIR_TIMEOUT_SECONDS = 300
 
-DEVICE_PAGES = {
-    DeviceState.ABSENT: ("phone-symbolic", "Conecta el iPhone", "Usa el cable USB y desbloquéalo."),
-    DeviceState.RECONNECT: (
-        "dialog-warning-symbolic",
-        "Desconecta y vuelve a conectar el cable",
-        "El iPhone está enchufado pero no responde. Pasa a veces cuando el portátil se ha dormido.",
-    ),
-    DeviceState.UNTRUSTED: (
-        "dialog-password-symbolic",
-        "Mira el iPhone",
-        "Pulsa «Confiar» y escribe tu código.\nSolo hace falta la primera vez.",
-    ),
-}
+# Funciones y no constantes: los textos salen en el idioma elegido al construir la ventana
 
-PROGRESS_TEXT = {
-    Phase.CONNECTING: ("phone-symbolic", "Preparando la copia…", "Conectando con el iPhone."),
-    Phase.WAITING_PASSCODE: (
-        "dialog-password-symbolic",
-        "Escribe tu código en el iPhone",
-        "El iPhone lo pide para empezar la copia.",
-    ),
-    Phase.COPYING: ("document-save-symbolic", "Copiando el iPhone…", ""),
-}
+def device_page_text(state: DeviceState) -> tuple[str, str, str]:
+    return {
+        DeviceState.ABSENT: ("phone-symbolic", _("Connect the iPhone"), _("Use the USB cable and unlock it.")),
+        DeviceState.RECONNECT: (
+            "dialog-warning-symbolic",
+            _("Unplug the cable and plug it back in"),
+            _("The iPhone is plugged in but not responding. This sometimes happens after the laptop has slept."),
+        ),
+        DeviceState.UNTRUSTED: (
+            "dialog-password-symbolic",
+            _("Look at the iPhone"),
+            _("Tap “Trust” and enter your passcode.\nYou only need to do this the first time."),
+        ),
+    }[state]
+
+
+def progress_text(phase: Phase) -> tuple[str, str, str]:
+    return {
+        Phase.CONNECTING: ("phone-symbolic", _("Preparing the backup…"), _("Connecting to the iPhone.")),
+        Phase.WAITING_PASSCODE: (
+            "dialog-password-symbolic",
+            _("Enter your passcode on the iPhone"),
+            _("The iPhone asks for it to start the backup."),
+        ),
+        Phase.COPYING: ("document-save-symbolic", _("Backing up the iPhone…"), ""),
+    }[phase]
 
 
 def on_main(fn: Callable, *args) -> None:
@@ -86,8 +93,11 @@ class MainWindow(Adw.ApplicationWindow):
         self.result_aside: Optional[Path] = None
 
         toolbar = Adw.ToolbarView()
-        toolbar.add_top_bar(Adw.HeaderBar())
-        self.battery_banner = Adw.Banner(title="El portátil va con batería: enchúfalo antes de hacer la copia.")
+        header = Adw.HeaderBar()
+        header.pack_end(Gtk.MenuButton(icon_name="open-menu-symbolic", menu_model=main_menu(), primary=True,
+                                       tooltip_text=_("Main menu")))
+        toolbar.add_top_bar(header)
+        self.battery_banner = Adw.Banner(title=_("The laptop is on battery: plug it in before backing up."))
         toolbar.add_top_bar(self.battery_banner)
         self.stack = Gtk.Stack(transition_type=Gtk.StackTransitionType.CROSSFADE)
         toolbar.set_content(self.stack)
@@ -101,9 +111,18 @@ class MainWindow(Adw.ApplicationWindow):
         self.stack.set_visible_child_name("device")
 
         self.connect("close-request", self._on_close_request)
+        self.connect("destroy", self._on_destroy)
         self._refresh_backups()
         self._poll()
-        GLib.timeout_add_seconds(POLL_SECONDS, self._poll)
+        self.poll_source = GLib.timeout_add_seconds(POLL_SECONDS, self._poll)
+
+    def can_rebuild(self) -> bool:
+        """Se puede cambiar de idioma (rehaciendo la ventana) si no hay nada a medias."""
+        return self.job is None and not self.busy
+
+    def _on_destroy(self, _window) -> None:
+        GLib.source_remove(self.poll_source)
+        self._stop_pulse()
 
     # --- Construcción ---
 
@@ -115,7 +134,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.home_page = Adw.StatusPage(icon_name="phone-symbolic")
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
 
-        self.backup_button = pill_button("Hacer copia ahora", "suggested-action")
+        self.backup_button = pill_button(_("Back up now"), "suggested-action")
         self.backup_button.connect("clicked", self._on_backup_clicked)
         box.append(self.backup_button)
         self.last_backup_label = Gtk.Label(css_classes=["title-4"], margin_top=6)
@@ -123,21 +142,21 @@ class MainWindow(Adw.ApplicationWindow):
         self.backup_kind_label = Gtk.Label(css_classes=["dim-label"], wrap=True, justify=Gtk.Justification.CENTER)
         box.append(self.backup_kind_label)
 
-        encryption_group = Adw.PreferencesGroup(title="Cifrado", margin_top=24)
-        self.encryption_row = Adw.ActionRow(title="Copia cifrada", subtitle_lines=3)
+        encryption_group = Adw.PreferencesGroup(title=_("Encryption"), margin_top=24)
+        self.encryption_row = Adw.ActionRow(title=_("Encrypted backup"), subtitle_lines=3)
         self.encryption_button = Gtk.Button(valign=Gtk.Align.CENTER)
         self.encryption_button.connect("clicked", self._on_encryption_clicked)
         self.encryption_row.add_suffix(self.encryption_button)
         encryption_group.add(self.encryption_row)
         box.append(encryption_group)
 
-        self.backups_group = Adw.PreferencesGroup(title="Copias guardadas")
+        self.backups_group = Adw.PreferencesGroup(title=_("Saved backups"))
         self.backup_rows: list[Gtk.Widget] = []
         box.append(self.backups_group)
 
-        folder_group = Adw.PreferencesGroup(title="Dónde se guardan")
-        self.folder_row = Adw.ActionRow(title="Carpeta")
-        change = Gtk.Button(label="Cambiar…", valign=Gtk.Align.CENTER)
+        folder_group = Adw.PreferencesGroup(title=_("Where they are saved"))
+        self.folder_row = Adw.ActionRow(title=_("Folder"))
+        change = Gtk.Button(label=_("Change…"), valign=Gtk.Align.CENTER)
         change.connect("clicked", self._on_change_folder)
         self.folder_row.add_suffix(change)
         folder_group.add(self.folder_row)
@@ -154,12 +173,12 @@ class MainWindow(Adw.ApplicationWindow):
         self.progress_details = Gtk.Label(css_classes=["dim-label"], wrap=True, justify=Gtk.Justification.CENTER)
         box.append(self.progress_details)
         self.stalled_label = Gtk.Label(
-            label="Parece que no avanza. Si sigue así unos minutos, cancela, desconecta el cable y vuelve a conectarlo.",
+            label=_("It doesn't seem to be moving. If it stays like this for a few minutes, cancel, unplug the cable and plug it back in."),
             css_classes=["warning"], wrap=True, justify=Gtk.Justification.CENTER, visible=False,
         )
         box.append(self.stalled_label)
-        box.append(Gtk.Label(label="No desconectes el iPhone.", css_classes=["heading"], margin_top=12))
-        self.cancel_button = pill_button("Cancelar", "destructive-action")
+        box.append(Gtk.Label(label=_("Don't unplug the iPhone."), css_classes=["heading"], margin_top=12))
+        self.cancel_button = pill_button(_("Cancel"), "destructive-action")
         self.cancel_button.set_margin_top(12)
         self.cancel_button.connect("clicked", lambda _b: self._confirm_cancel())
         box.append(self.cancel_button)
@@ -169,11 +188,11 @@ class MainWindow(Adw.ApplicationWindow):
     def _build_result_page(self) -> None:
         self.result_page = Adw.StatusPage()
         box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
-        back = pill_button("Volver", "suggested-action")
+        back = pill_button(_("Back"), "suggested-action")
         back.connect("clicked", self._on_result_back)
         box.append(back)
         # Tras activar el cifrado, la copia antigua sin cifrar se aparta y se ofrece borrarla al terminar
-        self.delete_aside_button = Gtk.Button(label="Borrar la copia anterior sin cifrar", halign=Gtk.Align.CENTER,
+        self.delete_aside_button = Gtk.Button(label=_("Delete the previous unencrypted backup"), halign=Gtk.Align.CENTER,
                                               css_classes=["flat", "error"], visible=False)
         self.delete_aside_button.connect("clicked", lambda _b: self._confirm_delete(self.result_aside))
         box.append(self.delete_aside_button)
@@ -183,7 +202,7 @@ class MainWindow(Adw.ApplicationWindow):
     def _build_working_page(self) -> None:
         self.working_page = Adw.StatusPage(
             icon_name="dialog-password-symbolic",
-            description="Si el iPhone te pide el código, escríbelo.",
+            description=_("If the iPhone asks for your passcode, enter it."),
             child=Gtk.Spinner(spinning=True, width_request=32, height_request=32),
         )
         self.stack.add_named(self.working_page, "working")
@@ -202,7 +221,8 @@ class MainWindow(Adw.ApplicationWindow):
         self.runner.submit(coro).add_done_callback(done)
 
     def _ask(self, heading: str, body: str, ok_label: str, on_ok: Callable[[], None],
-             cancel_label: str = "Cancelar", destructive: bool = False) -> None:
+             cancel_label: str = "", destructive: bool = False) -> None:
+        cancel_label = cancel_label or _("Cancel")
         dialog = Adw.AlertDialog(heading=heading, body=body)
         dialog.add_response("cancel", cancel_label)
         dialog.add_response("ok", ok_label)
@@ -216,7 +236,7 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _tell(self, heading: str, body: str) -> None:
         dialog = Adw.AlertDialog(heading=heading, body=body)
-        dialog.add_response("ok", "Entendido")
+        dialog.add_response("ok", _("OK"))
         dialog.present(self)
 
     # --- iPhone ---
@@ -259,7 +279,7 @@ class MainWindow(Adw.ApplicationWindow):
         if self.showing_result:
             return
         if status.info is None:
-            icon, title, description = DEVICE_PAGES[status.state]
+            icon, title, description = device_page_text(status.state)
             self.device_page.set_icon_name(icon)
             self.device_page.set_title(title)
             self.device_page.set_description(description)
@@ -268,7 +288,8 @@ class MainWindow(Adw.ApplicationWindow):
         info = status.info
         self.home_page.set_title(info.name)
         self.home_page.set_description(
-            f"iOS {info.ios_version} · {fmt.size(info.used)} usados de {fmt.size(info.capacity)}"
+            _("iOS {version} · {used} used of {capacity}").format(
+                version=info.ios_version, used=fmt.size(info.used), capacity=fmt.size(info.capacity))
         )
         self._update_last_backup()
         self._update_encryption_row(info)
@@ -278,12 +299,12 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _update_encryption_row(self, info: device.DeviceInfo) -> None:
         if info.encrypted:
-            self.encryption_row.set_subtitle("Activada: la copia guarda también contraseñas, Salud y WhatsApp.")
-            self.encryption_button.set_label("Cambiar contraseña…")
+            self.encryption_row.set_subtitle(_("On: the backup also keeps passwords, Health and WhatsApp."))
+            self.encryption_button.set_label(_("Change password…"))
             self.encryption_button.set_css_classes([])
         else:
-            self.encryption_row.set_subtitle("Desactivada: la copia no guarda contraseñas, ni datos de Salud ni de WhatsApp.")
-            self.encryption_button.set_label("Activar…")
+            self.encryption_row.set_subtitle(_("Off: the backup doesn't keep passwords, Health or WhatsApp data."))
+            self.encryption_button.set_label(_("Turn on…"))
             self.encryption_button.set_css_classes(["suggested-action"])
 
     def _on_encryption_clicked(self, _button) -> None:
@@ -301,23 +322,23 @@ class MainWindow(Adw.ApplicationWindow):
         """`old` None: activar. "" : cambiar sin tenerla en el llavero (se pregunta). Otro: cambiar."""
         enabling = old is None
         if enabling:
-            heading = "Activar la copia cifrada"
-            body = ("Así la copia guarda también las contraseñas, los datos de Salud y los de WhatsApp.\n\n"
-                    "Te recomendamos usar la misma contraseña con la que entras en el ordenador: así solo "
-                    "tienes que recordar una. Se guardará en el llavero del ordenador.\n\n"
-                    "La próxima copia será completa y puede tardar varias horas. La copia actual se conserva "
-                    "hasta que la nueva termine.")
+            heading = _("Turn on encrypted backup")
+            body = _("This way the backup also keeps passwords, Health data and WhatsApp.\n\n"
+                     "We recommend using the same password you use to log in to this computer, so there's "
+                     "only one to remember. It will be saved in the computer's keyring.\n\n"
+                     "The next backup will be a full one and can take several hours. The current backup is "
+                     "kept until the new one finishes.")
         else:
-            heading = "Cambiar la contraseña de las copias"
-            body = ("Si has cambiado la contraseña con la que entras en el ordenador, escribe aquí la nueva "
-                    "para que sigan siendo la misma.")
+            heading = _("Change the backup password")
+            body = _("If you have changed the password you use to log in to this computer, enter the new one "
+                     "here so they stay the same.")
         dialog = Adw.AlertDialog(heading=heading, body=body)
         group = Adw.PreferencesGroup()
-        old_row = Adw.PasswordEntryRow(title="Contraseña actual de las copias")
+        old_row = Adw.PasswordEntryRow(title=_("Current backup password"))
         if old == "":
             group.add(old_row)
-        new_row = Adw.PasswordEntryRow(title="Contraseña nueva")
-        repeat_row = Adw.PasswordEntryRow(title="Repítela")
+        new_row = Adw.PasswordEntryRow(title=_("New password"))
+        repeat_row = Adw.PasswordEntryRow(title=_("Repeat it"))
         group.add(new_row)
         group.add(repeat_row)
         problem_label = Gtk.Label(css_classes=["error"], wrap=True, margin_top=6, visible=False)
@@ -326,8 +347,8 @@ class MainWindow(Adw.ApplicationWindow):
         content.append(problem_label)
         dialog.set_extra_child(content)
 
-        dialog.add_response("cancel", "Cancelar")
-        dialog.add_response("ok", "Activar" if enabling else "Cambiar")
+        dialog.add_response("cancel", _("Cancel"))
+        dialog.add_response("ok", _("Turn on") if enabling else _("Change"))
         dialog.set_response_appearance("ok", Adw.ResponseAppearance.SUGGESTED)
         dialog.set_response_enabled("ok", False)
         dialog.set_close_response("cancel")
@@ -336,7 +357,7 @@ class MainWindow(Adw.ApplicationWindow):
             new, repeated = new_row.get_text(), repeat_row.get_text()
             problem = encryption.check_new_password(new, repeated)
             if old == "" and not old_row.get_text():
-                problem = problem or "Falta la contraseña actual."
+                problem = problem or _("The current password is missing.")
             # No regañar mientras se está escribiendo la segunda
             problem_label.set_visible(bool(problem and repeated))
             problem_label.set_label(problem or "")
@@ -354,7 +375,7 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _set_password(self, info: device.DeviceInfo, new: str, old: str) -> None:
         self.busy = True
-        self.working_page.set_title("Cambiando la contraseña…" if old else "Activando el cifrado…")
+        self.working_page.set_title(_("Changing the password…") if old else _("Turning on encryption…"))
         self.stack.set_visible_child_name("working")
 
         async def change() -> None:
@@ -367,12 +388,12 @@ class MainWindow(Adw.ApplicationWindow):
                 error = friendly(exc)
                 self._tell(error.title, error.hint)
             elif old:
-                self._tell("Contraseña cambiada", "Se ha guardado en el llavero del ordenador.")
+                self._tell(_("Password changed"), _("It has been saved in the computer's keyring."))
             else:
-                self._tell("Copia cifrada activada",
-                           "La contraseña se ha guardado en el llavero del ordenador.\n\n"
-                           "Ahora pulsa «Hacer copia ahora». Será una copia completa y puede tardar varias horas: "
-                           "deja el portátil enchufado.")
+                self._tell(_("Encrypted backup turned on"),
+                           _("The password has been saved in the computer's keyring.\n\n"
+                             "Now press “Back up now”. It will be a full backup and can take several hours: "
+                             "keep the laptop plugged in."))
             if self.status:
                 self._apply_status(self.status)
             self._poll()
@@ -383,7 +404,7 @@ class MainWindow(Adw.ApplicationWindow):
 
     def _refresh_backups(self) -> None:
         root = self.settings.root
-        self.folder_row.set_subtitle(f"{root}\n{fmt.size(storage.free_space(root))} libres")
+        self.folder_row.set_subtitle(_("{folder}\n{free} free").format(folder=root, free=fmt.size(storage.free_space(root))))
         self._submit(asyncio.to_thread(storage.list_backups, root), self._on_backups)
 
     def _on_backups(self, entries: Optional[list], _exc: Optional[BaseException]) -> None:
@@ -392,7 +413,7 @@ class MainWindow(Adw.ApplicationWindow):
             self.backups_group.remove(row)
         self.backup_rows = []
         if not self.backups:
-            row = Adw.ActionRow(title="Todavía no hay ninguna copia")
+            row = Adw.ActionRow(title=_("No backups yet"))
             self.backups_group.add(row)
             self.backup_rows.append(row)
         for entry in self.backups:
@@ -402,20 +423,20 @@ class MainWindow(Adw.ApplicationWindow):
         self._update_last_backup()
 
     def _backup_row(self, entry: storage.BackupEntry) -> Adw.ActionRow:
-        state = "cifrada" if entry.encrypted else "sin cifrar"
+        state = _("encrypted") if entry.encrypted else _("not encrypted")
         base = f"{fmt.ago(entry.date)} · iOS {entry.ios_version} · {state}"
         if not entry.complete:
-            base = f"No terminó · {base}"
-        title = f"{entry.device_name} (copia anterior)" if entry.set_aside else entry.device_name
+            base = _("Didn't finish · {details}").format(details=base)
+        title = _("{device} (previous backup)").format(device=entry.device_name) if entry.set_aside else entry.device_name
         row = Adw.ActionRow(title=title, subtitle=base)
         row.add_prefix(Gtk.Image(icon_name="emblem-ok-symbolic" if entry.complete else "dialog-warning-symbolic"))
         open_button = Gtk.Button(icon_name="folder-open-symbolic", valign=Gtk.Align.CENTER,
-                                 tooltip_text="Abrir carpeta", css_classes=["flat"])
+                                 tooltip_text=_("Open folder"), css_classes=["flat"])
         open_button.connect("clicked", lambda _b: Gtk.FileLauncher(file=Gio.File.new_for_path(str(entry.path))).launch(self, None, None))
         row.add_suffix(open_button)
         if entry.set_aside and not self.job:
             delete_button = Gtk.Button(icon_name="user-trash-symbolic", valign=Gtk.Align.CENTER,
-                                       tooltip_text="Borrar esta copia", css_classes=["flat"])
+                                       tooltip_text=_("Delete this backup"), css_classes=["flat"])
             delete_button.connect("clicked", lambda _b: self._confirm_delete(entry.path))
             row.add_suffix(delete_button)
         # Medir cientos de miles de ficheros tarda: se rellena cuando acaba
@@ -430,21 +451,21 @@ class MainWindow(Adw.ApplicationWindow):
         entry = next((e for e in self.backups if e.udid == info.udid and e.complete), None)
         entry = entry or next((e for e in self.backups if e.udid == info.udid), None)
         if entry is None:
-            self.last_backup_label.set_label("Todavía no hay ninguna copia de este iPhone")
+            self.last_backup_label.set_label(_("There's no backup of this iPhone yet"))
         elif not entry.complete:
-            self.last_backup_label.set_label("La última copia no terminó")
+            self.last_backup_label.set_label(_("The last backup didn't finish"))
         else:
-            self.last_backup_label.set_label(f"Última copia: {fmt.ago(entry.date)}")
+            self.last_backup_label.set_label(_("Last backup: {when}").format(when=fmt.ago(entry.date)))
         root = self.settings.root
         if encryption_changed(root, info.udid, info.encrypted):
             self.backup_kind_label.set_label(
-                "Como ha cambiado el cifrado, la próxima copia será completa y puede tardar varias horas. "
-                "La copia actual se conserva hasta que la nueva termine."
+                _("Since encryption has changed, the next backup will be a full one and can take several hours. "
+                  "The current backup is kept until the new one finishes.")
             )
         elif has_previous_backup(root, info.udid):
-            self.backup_kind_label.set_label("Solo se copiará lo que ha cambiado desde la última vez.")
+            self.backup_kind_label.set_label(_("Only what changed since last time will be copied."))
         else:
-            self.backup_kind_label.set_label("La primera copia puede tardar varias horas.")
+            self.backup_kind_label.set_label(_("The first backup can take several hours."))
 
     def _confirm_delete(self, path: Optional[Path]) -> None:
         if path is None:
@@ -455,18 +476,18 @@ class MainWindow(Adw.ApplicationWindow):
 
         def deleted(_result, exc: Optional[BaseException]) -> None:
             if exc is not None:
-                self._tell("No se ha podido borrar", f"{exc}")
+                self._tell(_("Couldn't delete it"), f"{exc}")
             if path == self.result_aside:
                 self.result_aside = None
                 self.delete_aside_button.set_visible(False)
             self._refresh_backups()
 
-        self._ask("¿Borrar la copia anterior?",
-                  f"Se borrará {path.name} para siempre. La copia nueva no se toca.",
-                  "Borrar", delete, destructive=True)
+        self._ask(_("Delete the previous backup?"),
+                  _("{name} will be deleted for good. The new backup is not touched.").format(name=path.name),
+                  _("Delete"), delete, destructive=True)
 
     def _on_change_folder(self, _button) -> None:
-        dialog = Gtk.FileDialog(title="Elige dónde guardar las copias",
+        dialog = Gtk.FileDialog(title=_("Choose where to save backups"),
                                 initial_folder=Gio.File.new_for_path(str(self.settings.root)))
 
         def chosen(dialog: Gtk.FileDialog, result) -> None:
@@ -490,14 +511,15 @@ class MainWindow(Adw.ApplicationWindow):
         needed = storage.space_needed(info.used, next_backup_is_incremental(root, info.udid, info.encrypted))
         free = storage.free_space(root)
         if free < needed:
-            self._tell("No hay espacio suficiente",
-                       f"Hacen falta unos {fmt.size(needed)} libres y solo hay {fmt.size(free)}.\n"
-                       "Libera espacio o elige otra carpeta, por ejemplo en un disco externo.")
+            self._tell(_("Not enough space"),
+                       _("About {needed} must be free and there is only {free}.\n"
+                         "Free up some space or choose another folder, for example on an external disk.").format(
+                           needed=fmt.size(needed), free=fmt.size(free)))
             return
         if power.on_battery():
-            self._ask("El portátil va con batería",
-                      "La copia puede tardar mucho. Si se queda sin batería a mitad, habrá que repetirla.",
-                      "Empezar igualmente", lambda: self._start_backup(info), cancel_label="Esperar")
+            self._ask(_("The laptop is on battery"),
+                      _("The backup can take a long time. If the battery runs out halfway, it will have to be redone."),
+                      _("Start anyway"), lambda: self._start_backup(info), cancel_label=_("Wait"))
             return
         self._start_backup(info)
 
@@ -506,10 +528,10 @@ class MainWindow(Adw.ApplicationWindow):
                              udid=info.udid)
         # Si el portátil se duerme a mitad, la copia se cuelga sin avisar
         self.inhibit_cookie = self.get_application().inhibit(
-            self, Gtk.ApplicationInhibitFlags.SUSPEND | Gtk.ApplicationInhibitFlags.IDLE, "Copia del iPhone en curso"
+            self, Gtk.ApplicationInhibitFlags.SUSPEND | Gtk.ApplicationInhibitFlags.IDLE, _("iPhone backup in progress")
         )
         self.cancel_button.set_sensitive(True)
-        self.cancel_button.set_label("Cancelar")
+        self.cancel_button.set_label(_("Cancel"))
         self._render_progress(self.job.snapshot)
         self.stack.set_visible_child_name("progress")
         self._submit(self.job.run(), self._on_backup_finished)
@@ -517,31 +539,31 @@ class MainWindow(Adw.ApplicationWindow):
     def _render_progress(self, snap: Snapshot) -> None:
         if self.job is None or snap.phase.finished:
             return
-        icon, title, description = PROGRESS_TEXT[snap.phase]
+        icon, title, description = progress_text(snap.phase)
         self.progress_page.set_icon_name(icon)
         self.progress_page.set_title(title)
         if snap.phase == Phase.COPYING and not snap.received:
             # Antes de mandar nada el iPhone puede pasarse un par de minutos preparando los datos
             self._start_pulse()
-            description = "El iPhone está preparando los datos. Puede tardar un par de minutos."
+            description = _("The iPhone is preparing the data. This can take a couple of minutes.")
             self.progress_details.set_label("")
         elif snap.phase == Phase.COPYING:
             self._stop_pulse()
             if snap.percent is not None:
                 self.progress_bar.set_fraction(snap.percent / 100)
-                description = f"{snap.percent:.0f} %"
-                self.set_title(f"{snap.percent:.0f} % · {APP_NAME}")
+                description = fmt.percent(snap.percent)
+                self.set_title(f"{description} · {APP_NAME}")
             else:
                 self.progress_bar.pulse()
             # Al empezar una incremental casi no llegan datos (el iPhone lee el índice antiguo): «333 B · 18 B/s» confunde
             if snap.received < 10**6:
-                details = "Comparando con la copia anterior…"
+                details = _("Comparing with the previous backup…")
             else:
-                details = f"{fmt.size(snap.received)} copiados · {fmt.size(snap.speed)}/s"
+                details = _("{received} copied · {speed}/s").format(received=fmt.size(snap.received), speed=fmt.size(snap.speed))
             if snap.incremental:
-                details += "\nSolo se copia lo que ha cambiado."
+                details += "\n" + _("Only what changed is being copied.")
             else:
-                details += f" · quedan {fmt.duration(snap.eta)}"
+                details += " · " + _("{eta} left").format(eta=fmt.duration(snap.eta))
             self.progress_details.set_label(details)
         else:
             self._start_pulse()
@@ -563,12 +585,12 @@ class MainWindow(Adw.ApplicationWindow):
             if self.job:
                 self.job.cancel()
                 self.cancel_button.set_sensitive(False)
-                self.cancel_button.set_label("Cancelando…")
+                self.cancel_button.set_label(_("Cancelling…"))
             if then:
                 then()
 
-        self._ask("¿Cancelar la copia?", "La copia no quedará completa y habrá que hacerla otra vez.",
-                  "Cancelar copia", cancel, cancel_label="Seguir copiando", destructive=True)
+        self._ask(_("Cancel the backup?"), _("The backup won't be complete and will have to be done again."),
+                  _("Cancel backup"), cancel, cancel_label=_("Keep backing up"), destructive=True)
 
     def _on_backup_finished(self, snap: Optional[Snapshot], exc: Optional[BaseException]) -> None:
         self._stop_pulse()
@@ -578,16 +600,16 @@ class MainWindow(Adw.ApplicationWindow):
         self.job = None
         self.set_title(APP_NAME)
         if exc is not None or snap is None:
-            snap = Snapshot(Phase.FAILED, error=friendly(exc or RuntimeError("sin resultado")))
+            snap = Snapshot(Phase.FAILED, error=friendly(exc or RuntimeError("no result")))
 
         if snap.phase == Phase.DONE:
-            icon, title = "emblem-ok-symbolic", "¡Copia terminada!"
-            body = f"Guardada en {self.settings.root}.\nYa puedes desconectar el iPhone."
+            icon, title = "emblem-ok-symbolic", _("Backup finished!")
+            body = _("Saved in {folder}.\nYou can unplug the iPhone now.").format(folder=self.settings.root)
             if snap.set_aside:
-                body += "\n\nLa copia anterior sin cifrar sigue guardada. Ya no hace falta: puedes borrarla."
+                body += "\n\n" + _("The previous unencrypted backup is still saved. It's no longer needed: you can delete it.")
         elif snap.phase == Phase.CANCELLED:
-            icon, title = "process-stop-symbolic", "Copia cancelada"
-            body = snap.hint or "La copia no se ha completado."
+            icon, title = "process-stop-symbolic", _("Backup cancelled")
+            body = snap.hint or _("The backup was not completed.")
         else:
             icon, title = "dialog-error-symbolic", snap.error.title
             body = snap.error.hint

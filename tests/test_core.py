@@ -4,10 +4,12 @@ from pathlib import Path
 
 from pymobiledevice3.exceptions import ConnectionTerminatedError, NotEnoughDiskSpaceError
 
-from movris_vault import fmt
+import pytest
+
+from movris_vault import fmt, i18n
 from movris_vault.core import device, power, storage
 from movris_vault.core.backup import ProgressEstimator, has_previous_backup
-from movris_vault.core.errors import DISCONNECTED, friendly
+from movris_vault.core.errors import friendly
 
 UDID = "00008000-000A1B2C3D4E5F60"
 
@@ -32,6 +34,18 @@ def write_sysfs(root: Path, name: str, **files: str) -> None:
     d.mkdir(parents=True)
     for key, value in files.items():
         (d / key).write_text(value + "\n")
+
+
+@pytest.fixture
+def spanish():
+    i18n.set_language("es")
+    yield
+    i18n.set_language("en")
+
+
+@pytest.fixture(autouse=True)
+def english_by_default():
+    i18n.set_language("en")
 
 
 # --- storage ---
@@ -114,8 +128,8 @@ def test_progress_over_expected_size_stays_below_100():
 
 # --- errores ---
 
-def test_friendly_errors():
-    assert friendly(ConnectionTerminatedError()) is DISCONNECTED
+def test_friendly_errors(spanish):
+    assert friendly(ConnectionTerminatedError()).title == "Se ha perdido la conexión con el iPhone"
     assert "espacio" in friendly(NotEnoughDiskSpaceError("x")).title
     assert "Detalle técnico" in friendly(ValueError("raro")).hint
 
@@ -143,7 +157,7 @@ def test_desktop_without_battery_is_not_on_battery(tmp_path):
 
 # --- formato ---
 
-def test_formatting():
+def test_formatting(spanish):
     assert fmt.size(245_212_989_992) == "245,2 GB"
     assert fmt.duration(30) == "menos de un minuto"
     assert fmt.duration(2 * 3600 + 5 * 60) == "2 h 05 min"
@@ -199,3 +213,82 @@ def test_set_aside_and_put_back(tmp_path):
     assert (original / "Manifest.db").exists() and not (original / "a-medias").exists()
     [entry] = storage.list_backups(tmp_path)
     assert not entry.set_aside
+
+
+# --- idiomas ---
+
+def test_formatting_in_english():
+    assert fmt.size(245_212_989_992) == "245.2 GB"
+    assert fmt.percent(24.9, 1) == "24.9%"
+    now = datetime(2026, 10, 25, 18, tzinfo=timezone.utc)
+    assert fmt.ago(now - timedelta(days=1), now) == "yesterday"
+    assert fmt.ago(now - timedelta(days=3), now) == "3 days ago"
+    assert fmt.ago(now - timedelta(days=31), now) == "1 month ago"
+
+
+def test_spanish_plurals(spanish):
+    now = datetime(2026, 10, 25, 18, tzinfo=timezone.utc)
+    assert fmt.ago(now - timedelta(days=31), now) == "hace 1 mes"
+    assert fmt.ago(now - timedelta(days=95), now) == "hace 3 meses"
+
+
+def test_switching_language_changes_texts():
+    from movris_vault.i18n import _
+
+    assert _("Back up now") == "Back up now"
+    assert i18n.set_language("es") == "es"
+    assert _("Back up now") == "Hacer copia ahora"
+    assert i18n.set_language("xx") == "en"
+    assert _("Back up now") == "Back up now"
+
+
+def test_system_language(monkeypatch):
+    for var in ("LANGUAGE", "LC_ALL", "LC_MESSAGES", "LANG"):
+        monkeypatch.delenv(var, raising=False)
+    assert i18n.system_language() == "en"
+    monkeypatch.setenv("LANG", "es_ES.UTF-8")
+    assert i18n.system_language() == "es"
+    monkeypatch.setenv("LANGUAGE", "de:es")
+    assert i18n.system_language() == "es"
+
+
+def test_parse_po_multiline_plural_and_fuzzy():
+    catalog = i18n.parse_po('''msgid ""
+msgstr "Language: es\\n"
+
+msgid "Two "
+"lines"
+msgstr "Dos "
+"líneas"
+
+msgid "{n} day"
+msgid_plural "{n} days"
+msgstr[0] "{n} día"
+msgstr[1] "{n} días"
+
+#, fuzzy
+msgid "Unsure"
+msgstr "Dudoso"
+
+msgid "Untranslated"
+msgstr ""
+''')
+    assert catalog == {"Two lines": ["Dos líneas"], "{n} day": ["{n} día", "{n} días"]}
+
+
+def test_every_text_is_translated_with_the_same_placeholders():
+    import string
+    import sys
+
+    sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "tools"))
+    from extract_strings import extract
+
+    def fields(text):
+        return sorted(f for _lit, f, _spec, _conv in string.Formatter().parse(text) if f)
+
+    for po in i18n.LOCALE_DIR.glob("*.po"):
+        catalog = i18n.parse_po(po.read_text(encoding="utf-8"))
+        for msgid, (plural, _places) in extract().items():
+            assert msgid in catalog, f"{po.name}: falta {msgid!r}"
+            for translation in catalog[msgid]:
+                assert fields(translation) == fields(plural or msgid), f"{po.name}: {msgid!r}"
